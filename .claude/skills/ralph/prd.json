@@ -1,0 +1,429 @@
+{
+  "project": "Executive Support System",
+  "branchName": "ralph/executive-support-system",
+  "description": "AI-Assisted Executive Support System - Capture decisions and tasks from meetings/emails with human-in-the-loop approval",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create SharePoint decision archive schema",
+      "description": "As a developer, I need to define the SharePoint list schema for storing archived decisions.",
+      "acceptanceCriteria": [
+        "Create SharePoint list definition with columns: DecisionId, DecisionText, MeetingReference, Approver, ApprovalDate, OriginalAISuggestion, ConfidenceScore, Status",
+        "Include metadata columns: CreatedAt, ModifiedAt, SourceType (meeting/email/chat)",
+        "Define column types: DecisionText as multiline, ConfidenceScore as number 0-100",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Foundation for decision archival - Phase 1"
+    },
+    {
+      "id": "US-002",
+      "title": "Create task suggestion data model",
+      "description": "As a developer, I need a data model for AI-suggested tasks before Planner integration.",
+      "acceptanceCriteria": [
+        "Define TaskSuggestion interface with: id, description, suggestedAssignee, suggestedDueDate, confidenceScore, status, sourceReference",
+        "Status enum: Suggested, Approved, Rejected, Modified",
+        "Include audit fields: createdAt, approvedBy, approvalTimestamp, rejectionReason",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Data model for task workflow"
+    },
+    {
+      "id": "US-003",
+      "title": "Create decision suggestion data model",
+      "description": "As a developer, I need a data model for AI-suggested decisions.",
+      "acceptanceCriteria": [
+        "Define DecisionSuggestion interface with: id, decisionText, context, transcriptExcerpt, confidenceScore, status",
+        "Status enum: Suggested, Approved, Rejected, Modified",
+        "Include audit fields: createdAt, modifiedText, approvedBy, approvalTimestamp, rejectionReason",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Data model for decision workflow"
+    },
+    {
+      "id": "US-004",
+      "title": "Create meeting processing service interface",
+      "description": "As a developer, I need service interfaces for meeting transcript processing.",
+      "acceptanceCriteria": [
+        "Define MeetingProcessingService interface with methods: processTranscript, generateSummary, extractDecisions, extractTasks",
+        "Define MeetingData interface with: meetingId, transcript, attendees, startTime, endTime, recordingUrl",
+        "Define ProcessingResult interface with: summary, decisionSuggestions[], taskSuggestions[]",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Service layer abstraction for meeting processing"
+    },
+    {
+      "id": "US-005",
+      "title": "Implement Microsoft Graph API client for Teams meetings",
+      "description": "As a developer, I need a client to fetch Teams meeting transcripts via Graph API.",
+      "acceptanceCriteria": [
+        "Create GraphApiClient class with authentication using Azure AD",
+        "Implement getMeetingTranscript(meetingId) method",
+        "Implement getMeetingDetails(meetingId) method returning attendees, duration, organizer",
+        "Handle API errors with proper error types",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Requires Microsoft Graph API permissions configured"
+    },
+    {
+      "id": "US-006",
+      "title": "Create AI suggestion extraction service stub",
+      "description": "As a developer, I need a service stub for AI-based decision/task extraction.",
+      "acceptanceCriteria": [
+        "Create AISuggestionService class implementing extraction interfaces",
+        "Implement extractDecisions(transcript) returning DecisionSuggestion[]",
+        "Implement extractTasks(transcript) returning TaskSuggestion[]",
+        "Return mock data for now with realistic confidence scores",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Stub for Microsoft Facilitator integration - to be replaced"
+    },
+    {
+      "id": "US-007",
+      "title": "Create approval queue data store",
+      "description": "As a developer, I need a data store for pending approval items.",
+      "acceptanceCriteria": [
+        "Create ApprovalQueue class with in-memory storage",
+        "Implement addItem(suggestion), getItemsByMeeting(meetingId), updateStatus(itemId, status)",
+        "Support filtering by status: Pending, Approved, Rejected",
+        "Include timestamp tracking for escalation logic",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "In-memory for MVP, replace with persistent storage later"
+    },
+    {
+      "id": "US-008",
+      "title": "Create approval workflow service",
+      "description": "As a developer, I need a service to manage the approval workflow.",
+      "acceptanceCriteria": [
+        "Create ApprovalWorkflowService with methods: submitForApproval, approve, reject, modify",
+        "approve() records approver identity and timestamp",
+        "reject() requires rejectionReason parameter",
+        "modify() stores both original and modified text",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Core human-in-the-loop logic"
+    },
+    {
+      "id": "US-009",
+      "title": "Create Planner integration service",
+      "description": "As a developer, I need a service to create tasks in Microsoft Planner.",
+      "acceptanceCriteria": [
+        "Create PlannerService class with Graph API authentication",
+        "Implement createTask(taskData) method that creates task in configured plan",
+        "Task includes: title, assignee, dueDate, notes with meeting reference link",
+        "Return created task ID for tracking",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Requires Planner plan ID configuration"
+    },
+    {
+      "id": "US-010",
+      "title": "Create decision archive service",
+      "description": "As a developer, I need a service to archive approved decisions to SharePoint.",
+      "acceptanceCriteria": [
+        "Create DecisionArchiveService class",
+        "Implement archiveDecision(decision) method that writes to SharePoint list",
+        "Include full audit trail: original suggestion, modifications, approver",
+        "Return archived decision ID",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Uses SharePoint schema from US-001"
+    },
+    {
+      "id": "US-011",
+      "title": "Create approval UI - meeting list component",
+      "description": "As an approver, I need to see a list of meetings with pending approvals.",
+      "acceptanceCriteria": [
+        "Create MeetingApprovalList component",
+        "Display meetings with: date, title, attendees count, pending items count",
+        "Sort by most recent first",
+        "Click navigates to meeting detail view",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "Phase 1 UI - meeting list"
+    },
+    {
+      "id": "US-012",
+      "title": "Create approval UI - decision suggestions panel",
+      "description": "As an approver, I need to see and act on decision suggestions for a meeting.",
+      "acceptanceCriteria": [
+        "Create DecisionSuggestionsPanel component",
+        "Display each suggestion with: text, confidence score badge, transcript excerpt",
+        "Confidence badge colors: green >= 80%, yellow 60-79%, red < 60%",
+        "Show warning for low confidence items",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "Phase 1 UI - decision display"
+    },
+    {
+      "id": "US-013",
+      "title": "Create approval UI - decision action buttons",
+      "description": "As an approver, I need buttons to approve, modify, or reject decisions.",
+      "acceptanceCriteria": [
+        "Add Approve, Modify, Reject buttons to each decision card",
+        "Approve button archives immediately with confirmation",
+        "Modify button opens inline text editor",
+        "Reject button opens modal requiring rejection reason",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "Phase 1 UI - decision actions"
+    },
+    {
+      "id": "US-014",
+      "title": "Create approval UI - task suggestions panel",
+      "description": "As an approver, I need to see and act on task suggestions for a meeting.",
+      "acceptanceCriteria": [
+        "Create TaskSuggestionsPanel component",
+        "Display each task with: description, suggested assignee, due date, confidence",
+        "Show 'Unassigned' badge if no assignee suggested",
+        "Show 'No due date' indicator if missing",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Phase 1 UI - task display"
+    },
+    {
+      "id": "US-015",
+      "title": "Create approval UI - task action buttons with edit",
+      "description": "As an approver, I need to approve tasks with ability to set assignee and due date.",
+      "acceptanceCriteria": [
+        "Add Approve, Modify, Reject buttons to each task card",
+        "Approve opens form to confirm/set assignee and due date",
+        "Assignee field is required before final approval",
+        "Creates task in Planner on approval",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "Phase 1 UI - task actions"
+    },
+    {
+      "id": "US-016",
+      "title": "Create audit log service",
+      "description": "As a compliance officer, I need all approval actions logged for audit.",
+      "acceptanceCriteria": [
+        "Create AuditLogService class",
+        "Log format: timestamp, action, userId, itemId, itemType, details",
+        "Actions: SUGGESTION_CREATED, APPROVED, REJECTED, MODIFIED, ARCHIVED",
+        "Store logs in append-only format",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "Compliance requirement - 15 year retention"
+    },
+    {
+      "id": "US-017",
+      "title": "Create decision search API endpoint",
+      "description": "As a compliance officer, I need to search archived decisions.",
+      "acceptanceCriteria": [
+        "Create GET /api/decisions/search endpoint",
+        "Support query params: keyword, dateFrom, dateTo, meetingId, approver",
+        "Return paginated results with: decisionText, meetingRef, approver, date",
+        "Include total count for pagination",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "Phase 1 search - keyword based"
+    },
+    {
+      "id": "US-018",
+      "title": "Create decision search UI",
+      "description": "As a compliance officer, I need a UI to search the decision archive.",
+      "acceptanceCriteria": [
+        "Create DecisionSearchPage component",
+        "Search form with: keyword input, date range picker, filter dropdowns",
+        "Results table with columns: Decision, Meeting, Approver, Date",
+        "Click row to view full decision details",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": "Phase 1 UI - search interface"
+    },
+    {
+      "id": "US-019",
+      "title": "Create escalation check service",
+      "description": "As a system, I need to escalate unreviewed items after 72 hours.",
+      "acceptanceCriteria": [
+        "Create EscalationService class",
+        "checkPendingItems() returns items older than 72 hours",
+        "escalate(itemId) marks item as escalated and notifies backup approver",
+        "Track escalation timestamp and target approver",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": "NFR requirement - prevent stuck items"
+    },
+    {
+      "id": "US-020",
+      "title": "Create batch approval functionality",
+      "description": "As an approver, I need to approve multiple items at once for efficiency.",
+      "acceptanceCriteria": [
+        "Add checkbox to each suggestion card",
+        "Add 'Select All' checkbox in header",
+        "Add 'Approve Selected' button that processes all checked items",
+        "Show confirmation dialog with count before batch approval",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": "FR-009 - batch operations"
+    },
+    {
+      "id": "US-021",
+      "title": "Create export to PDF/Excel functionality",
+      "description": "As a compliance officer, I need to export search results for audit documentation.",
+      "acceptanceCriteria": [
+        "Add Export button to search results page",
+        "Export dropdown with options: PDF, Excel",
+        "Export includes: all visible columns, applied filters, export timestamp",
+        "PDF has company header and page numbers",
+        "Typecheck passes"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": "FR-022 - audit documentation requirement"
+    },
+    {
+      "id": "US-022",
+      "title": "Create email flagging service interface",
+      "description": "As a developer, I need service interfaces for email decision/task detection.",
+      "acceptanceCriteria": [
+        "Define EmailProcessingService interface with: analyzeEmail, flagEmail, extractDecisions",
+        "Define EmailData interface with: emailId, subject, body, sender, recipients, timestamp",
+        "Define EmailAnalysisResult with: hasDecision, hasTasks, highlights[], confidence",
+        "Typecheck passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": "Phase 2 foundation - email interfaces"
+    },
+    {
+      "id": "US-023",
+      "title": "Implement email analysis via Graph API",
+      "description": "As a developer, I need to fetch and analyze emails via Graph API.",
+      "acceptanceCriteria": [
+        "Extend GraphApiClient with getEmails(userId, filter) method",
+        "Implement flagEmail(emailId, flags) to add categories to email",
+        "Flag categories: 'Contains Possible Decision', 'Contains Possible Task'",
+        "Handle rate limiting with retry logic",
+        "Typecheck passes"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": "Phase 2 - email access"
+    },
+    {
+      "id": "US-024",
+      "title": "Create email decision archival workflow",
+      "description": "As an approver, I need to archive decisions from flagged emails.",
+      "acceptanceCriteria": [
+        "Create EmailDecisionArchivalService",
+        "archiveFromEmail(emailId, decisionText) creates decision with email reference",
+        "Store original email link in decision metadata",
+        "Use same approval workflow as meeting decisions",
+        "Typecheck passes"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "Phase 2 - email archival"
+    },
+    {
+      "id": "US-025",
+      "title": "Create natural language search service stub",
+      "description": "As a developer, I need a service for semantic search capabilities.",
+      "acceptanceCriteria": [
+        "Create SemanticSearchService interface",
+        "Define queryDecisions(naturalLanguageQuery) method",
+        "Return ranked results with relevance scores",
+        "Stub implementation returns keyword-matched results",
+        "Typecheck passes"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": "Phase 3 foundation - semantic search stub"
+    },
+    {
+      "id": "US-026",
+      "title": "Create Power BI dashboard data endpoints",
+      "description": "As a data team member, I need API endpoints for Power BI dashboard.",
+      "acceptanceCriteria": [
+        "Create GET /api/analytics/decisions-by-date endpoint",
+        "Create GET /api/analytics/approval-rates endpoint",
+        "Create GET /api/analytics/ai-accuracy endpoint returning acceptance vs rejection rates",
+        "All endpoints support date range filtering",
+        "Typecheck passes"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": "Phase 3 - analytics data"
+    },
+    {
+      "id": "US-027",
+      "title": "Create configuration management",
+      "description": "As an admin, I need to configure system settings.",
+      "acceptanceCriteria": [
+        "Create ConfigurationService class",
+        "Store: SharePoint site URL, Planner plan ID, confidence thresholds, escalation hours",
+        "Support environment-based configuration",
+        "Validate configuration on startup",
+        "Typecheck passes"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "Operational requirement"
+    },
+    {
+      "id": "US-028",
+      "title": "Create role-based access control",
+      "description": "As an admin, I need to restrict access based on user roles.",
+      "acceptanceCriteria": [
+        "Define roles: Executive, ExecutiveAssistant, ComplianceOfficer, SystemAdmin",
+        "Create RBACService with checkPermission(userId, action) method",
+        "Executives can view own meetings only",
+        "ComplianceOfficers have read-only access to all",
+        "Typecheck passes"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": "NFR-011 - authorization"
+    }
+  ]
+}
