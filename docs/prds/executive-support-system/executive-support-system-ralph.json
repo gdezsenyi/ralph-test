@@ -1,0 +1,1436 @@
+{
+  "$schema": "ralph-user-stories-v1",
+  "metadata": {
+    "prd_title": "AI-Assisted Executive Support System",
+    "prd_source": "docs/prds/executive-support-system/executive-support-system-prd.md",
+    "generated_at": "2026-01-10T00:00:00Z",
+    "total_stories": 12,
+    "phases": [
+      { "number": 1, "name": "Meeting Processing (MVP)", "stories": ["US-001", "US-002", "US-003", "US-004", "US-005", "US-006", "US-007"] },
+      { "number": 2, "name": "Email Pipeline", "stories": ["US-008", "US-009", "US-010"] },
+      { "number": 3, "name": "Knowledge Base Enhancement", "stories": ["US-011"] },
+      { "number": 4, "name": "Chat Integration", "stories": ["US-012"] }
+    ],
+    "technology_stack": {
+      "platform": "Microsoft 365 (Teams, Outlook, SharePoint)",
+      "language": "Python 3.14+",
+      "core_technologies": ["Microsoft Decisions", "Microsoft Facilitator", "Microsoft Graph API", "Power Platform"],
+      "storage": "SharePoint/Confluence",
+      "task_management": "Microsoft Planner",
+      "analytics": "Power BI",
+      "web_framework": "FastAPI",
+      "testing": "pytest"
+    }
+  },
+  "user_stories": [
+    {
+      "id": "US-001",
+      "title": "Automatic Transcript Generation",
+      "phase": 1,
+      "priority": "MUST",
+      "persona": "Executive",
+
+      "prompt": {
+        "task_description": "Implement automatic transcript generation for Microsoft Teams meetings. When a Teams meeting with recording enabled ends, the system must automatically generate a transcript within 30 minutes, correctly identify speakers, and handle failures gracefully by notifying the meeting organizer.",
+
+        "context": "Executives currently rely on manual note-taking or memory for meeting content. This causes decision evaporation and context loss. Automatic transcription is the foundation for AI-assisted decision and task extraction in later phases. This integrates with Microsoft Teams native transcription capabilities.",
+
+        "requirements": [
+          {
+            "id": "REQ-001-01",
+            "description": "Generate transcript within 30 minutes after meeting ends",
+            "acceptance_criteria": "Given a Teams meeting with recording enabled, when the meeting ends, then a transcript is generated within 30 minutes",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-001-02",
+            "description": "Correctly identify speakers in multi-speaker meetings",
+            "acceptance_criteria": "Given a meeting with multiple speakers, when the transcript is generated, then speakers are correctly identified with speaker labels",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-001-03",
+            "description": "Notify organizer on transcription failure",
+            "acceptance_criteria": "Given poor audio quality, when transcription fails, then the system notifies the meeting organizer via Teams notification",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-001-04",
+            "description": "Respect confidential meeting settings",
+            "acceptance_criteria": "Given a confidential meeting with recording disabled, when meeting ends, then no transcript is created",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-001-05",
+            "description": "Store transcripts in SharePoint with appropriate permissions",
+            "acceptance_criteria": "Given a generated transcript, when stored, then it is saved in designated SharePoint location with permissions matching meeting attendees",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Leverage Microsoft Teams native transcription via Graph API",
+          "Use Microsoft Graph API subscription for meeting end events",
+          "Store transcripts in SharePoint document library with path: /sites/ExecutiveDecisions/Transcripts/{Year}/{Month}/",
+          "Implement webhook handler for Teams meeting lifecycle events",
+          "Use Azure AD for authentication and permission management",
+          "Implement retry logic with exponential backoff (3 attempts, 5s/15s/45s delays)",
+          "Log all transcription events for audit trail (15-year retention requirement)",
+          "Support English and Hungarian language content"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/services/transcription/transcription_service.py",
+          "src/services/transcription/test_transcription_service.py",
+          "src/integrations/teams/meeting_webhook_handler.py",
+          "src/integrations/teams/test_meeting_webhook_handler.py",
+          "src/integrations/sharepoint/transcript_storage.py",
+          "src/integrations/sharepoint/test_transcript_storage.py",
+          "src/integrations/graph/graph_client.py",
+          "src/notifications/teams_notifier.py",
+          "src/models/transcription.py",
+          "src/models/meeting.py"
+        ],
+
+        "dependencies": []
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "TranscriptionService class implemented with trigger_transcription(), get_status(), and store_transcript() methods",
+          "MeetingWebhookHandler receives and processes meeting end events",
+          "Transcripts successfully stored in SharePoint with correct folder structure",
+          "Speaker identification labels present in transcripts",
+          "Error notifications sent to organizer via Teams when transcription fails",
+          "Confidential meetings (recording disabled) are skipped",
+          "All unit tests pass with >80% coverage",
+          "Integration tests with mock Graph API succeed",
+          "Audit logging captures all transcription events"
+        ],
+        "verification_commands": [
+          "pytest src/services/transcription/ -v --cov=src/services/transcription --cov-fail-under=80",
+          "pytest src/integrations/teams/ -v --cov=src/integrations/teams --cov-fail-under=80",
+          "pytest src/integrations/sharepoint/ -v --cov=src/integrations/sharepoint --cov-fail-under=80",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_001_TRANSCRIPT_GENERATION_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 40,
+        "escape_conditions": [
+          "If Graph API authentication fails after 5 attempts, document required Azure AD permissions and pause",
+          "If SharePoint storage fails, verify site URL exists and app has Sites.ReadWrite.All permission",
+          "If webhook subscription fails, check Graph API subscription limits and notification URL accessibility",
+          "After 30 iterations without progress, create detailed blocker report with attempted solutions"
+        ],
+        "self_correction_hints": [
+          "Run tests after each file change: pytest src/path/to/test_file.py -v",
+          "Check Graph API response codes: 401=auth issue, 403=permission issue, 404=resource not found",
+          "Verify SharePoint site exists before attempting storage operations",
+          "Use Graph Explorer (https://developer.microsoft.com/graph/graph-explorer) to test API calls manually",
+          "Check Azure AD app registration has required permissions: OnlineMeetings.Read.All, Sites.ReadWrite.All",
+          "Review webhook payload structure in Teams developer documentation"
+        ]
+      }
+    },
+
+    {
+      "id": "US-002",
+      "title": "AI-Generated Meeting Summary",
+      "phase": 1,
+      "priority": "MUST",
+      "persona": "Executive Assistant",
+
+      "prompt": {
+        "task_description": "Implement AI-generated meeting summaries using Microsoft Facilitator. When a meeting transcript is available, generate a draft summary within 1 hour that includes attendees, duration, key topics discussed, and next steps. All summaries must be marked as 'DRAFT - Pending Approval' until human review.",
+
+        "context": "Executive assistants currently spend significant time creating meeting minutes manually. AI-generated summaries reduce this burden while ensuring consistency. Summaries serve as the foundation for decision and task extraction. The human-in-the-loop principle requires all AI output to be clearly marked as draft.",
+
+        "requirements": [
+          {
+            "id": "REQ-002-01",
+            "description": "Generate summary within 1 hour of transcript availability",
+            "acceptance_criteria": "Given a meeting transcript, when processing completes, then a summary is generated within 1 hour",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-002-02",
+            "description": "Include required summary components",
+            "acceptance_criteria": "Given a generated summary, when reviewed, then it includes: attendees list, meeting duration, key topics discussed, and next steps section",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-002-03",
+            "description": "Capture all significant discussion points",
+            "acceptance_criteria": "Given a summary, when compared to the transcript, then no significant discussion points (topics discussed for >2 minutes) are omitted",
+            "testable": false,
+            "completed": false
+          },
+          {
+            "id": "REQ-002-04",
+            "description": "Mark all summaries as draft pending approval",
+            "acceptance_criteria": "Given a generated summary, when created, then it is marked with status 'DRAFT - Pending Approval' and includes timestamp",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-002-05",
+            "description": "Scale summary length with meeting duration",
+            "acceptance_criteria": "Given meetings of varying lengths, when summaries are generated, then length is proportional (target: ~1 page for 1-hour meeting)",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Use Microsoft Facilitator API for summary generation",
+          "Summary structure: Header (meeting info) -> Attendees -> Key Topics -> Discussion Points -> Next Steps -> Footer (draft status)",
+          "Implement SummaryService with generate_summary(), get_summary_status(), and update_summary_status() methods",
+          "Store summaries alongside transcripts in SharePoint: /sites/ExecutiveDecisions/Summaries/{Year}/{Month}/",
+          "Link summaries to source transcripts via metadata",
+          "Target summary length: 250 words per 30 minutes of meeting",
+          "Include confidence indicators for extracted information",
+          "Support processing queue for multiple concurrent meetings"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/services/summary/summary_service.py",
+          "src/services/summary/test_summary_service.py",
+          "src/services/summary/summary_generator.py",
+          "src/services/summary/test_summary_generator.py",
+          "src/integrations/facilitator/facilitator_client.py",
+          "src/integrations/facilitator/test_facilitator_client.py",
+          "src/models/summary.py",
+          "src/queue/summary_processing_queue.py"
+        ],
+
+        "dependencies": ["US-001"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "SummaryService class implemented with all required methods",
+          "FacilitatorClient successfully calls Microsoft Facilitator API",
+          "Generated summaries contain all required sections (attendees, duration, topics, next steps)",
+          "All summaries have 'DRAFT - Pending Approval' status on creation",
+          "Summaries stored in SharePoint with link to source transcript",
+          "Processing queue handles multiple meetings without blocking",
+          "Summary length scales appropriately with meeting duration",
+          "All unit tests pass with >80% coverage",
+          "Integration test with mock Facilitator API succeeds"
+        ],
+        "verification_commands": [
+          "pytest src/services/summary/ -v --cov=src/services/summary --cov-fail-under=80",
+          "pytest src/integrations/facilitator/ -v --cov=src/integrations/facilitator --cov-fail-under=80",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_002_MEETING_SUMMARY_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 35,
+        "escape_conditions": [
+          "If Facilitator API returns errors, verify API endpoint and authentication credentials",
+          "If summaries are too short/long, adjust the word-per-minute ratio and retest",
+          "If required sections are missing, review Facilitator prompt engineering",
+          "After 25 iterations without progress, document Facilitator API limitations"
+        ],
+        "self_correction_hints": [
+          "Test summary generation with transcripts of varying lengths (15min, 30min, 1hr, 2hr)",
+          "Verify summary structure matches required format before storage",
+          "Check that draft status is set before any storage operation",
+          "Monitor processing queue for deadlocks or memory issues",
+          "Compare generated summaries against transcripts manually for first 5 meetings"
+        ]
+      }
+    },
+
+    {
+      "id": "US-003",
+      "title": "AI-Suggested Decisions",
+      "phase": 1,
+      "priority": "MUST",
+      "persona": "Executive Assistant",
+
+      "prompt": {
+        "task_description": "Implement AI-powered decision detection from meeting transcripts. The system must identify statements that appear to be decisions, extract them with context and rationale, assign confidence scores, and present them for human approval. Low-confidence suggestions must be clearly marked. All suggestions start with 'Suggested' status - never auto-approved or archived.",
+
+        "context": "Executive decisions frequently get lost or disputed because they're mentioned in meetings but never formally recorded. AI detection ensures no decisions are missed while maintaining human oversight. The system must identify explicit decisions ('We've decided to...'), consensus statements, and directional choices. This is critical for the 15-year audit trail requirement.",
+
+        "requirements": [
+          {
+            "id": "REQ-003-01",
+            "description": "Identify decision-like statements in transcripts",
+            "acceptance_criteria": "Given a meeting transcript, when the AI processes it, then it identifies statements that appear to be decisions with >60% confidence",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-003-02",
+            "description": "Include decision context and metadata",
+            "acceptance_criteria": "Given a suggested decision, when viewed, then it includes: decision text, context/rationale, timestamp in meeting, speaker, and confidence score",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-003-03",
+            "description": "Mark low-confidence suggestions clearly",
+            "acceptance_criteria": "Given a suggestion with confidence between 40-60%, when displayed, then it is clearly marked as 'Low Confidence - Review Carefully'",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-003-04",
+            "description": "Enable rejection with feedback",
+            "acceptance_criteria": "Given a suggested decision, when rejected, then the user can provide a rejection reason that is logged for model improvement",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-003-05",
+            "description": "Initialize suggestions with correct status",
+            "acceptance_criteria": "Given a new suggestion, when created, then its status is 'Suggested' (NOT approved, NOT archived)",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-003-06",
+            "description": "Include original transcript excerpt",
+            "acceptance_criteria": "Given a suggested decision, when viewed, then it includes the original transcript excerpt (±30 seconds context) for verification",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Use Microsoft Facilitator or Azure OpenAI for decision detection",
+          "Decision detection patterns: explicit decisions ('We've decided to...', 'The decision is...'), consensus ('We all agree...'), directional choices ('We will go with...', 'Let's proceed with...')",
+          "Confidence threshold for display: >= 40% (below 40% logged but not shown)",
+          "Store suggestions in database with status: 'suggested' | 'approved' | 'rejected' | 'modified'",
+          "Include transcript excerpt: 30 seconds before and after the detected statement",
+          "Categorize decisions: Strategic Direction, Policy/Procedure, Resource Allocation, Approval/Rejection, Assignment, Timeline/Deadline",
+          "Log all suggestions and outcomes for AI model improvement"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/services/decisions/decision_detection_service.py",
+          "src/services/decisions/test_decision_detection_service.py",
+          "src/services/decisions/decision_extractor.py",
+          "src/services/decisions/test_decision_extractor.py",
+          "src/models/decision.py",
+          "src/models/decision_suggestion.py",
+          "src/repositories/decision_suggestion_repository.py",
+          "src/repositories/test_decision_suggestion_repository.py"
+        ],
+
+        "dependencies": ["US-001", "US-002"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "DecisionDetectionService identifies decisions from transcripts",
+          "Confidence scores assigned to all suggestions (0-100%)",
+          "Suggestions with <40% confidence logged but not displayed",
+          "Suggestions with 40-60% confidence marked as 'Low Confidence'",
+          "All suggestions created with 'Suggested' status",
+          "Transcript excerpts included with each suggestion",
+          "Decision categories assigned automatically",
+          "Rejection reasons captured and stored",
+          "All unit tests pass with >80% coverage"
+        ],
+        "verification_commands": [
+          "pytest src/services/decisions/ -v --cov=src/services/decisions --cov-fail-under=80",
+          "pytest src/repositories/ -v --cov=src/repositories --cov-fail-under=80",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_003_DECISION_DETECTION_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 45,
+        "escape_conditions": [
+          "If decision detection accuracy is too low (<50% relevant), review and tune detection patterns",
+          "If too many false positives (>30%), increase confidence threshold or refine patterns",
+          "If transcript excerpts are not aligning with timestamps, verify timestamp parsing logic",
+          "After 35 iterations, if accuracy not improving, document current patterns and seek human feedback"
+        ],
+        "self_correction_hints": [
+          "Test with diverse transcript samples: formal meetings, brainstorming sessions, quick syncs",
+          "Verify confidence scores are calibrated: high-confidence items should be more accurate",
+          "Check that 'Suggested' status is set in all code paths before database save",
+          "Monitor false positive/negative rates in test data",
+          "Ensure rejection reasons are being logged correctly for model improvement"
+        ]
+      }
+    },
+
+    {
+      "id": "US-004",
+      "title": "AI-Suggested Tasks",
+      "phase": 1,
+      "priority": "MUST",
+      "persona": "Executive Assistant",
+
+      "prompt": {
+        "task_description": "Implement AI-powered task/action item detection from meeting transcripts. Identify statements that appear to be action items, suggest assignees from the organization directory, extract mentioned due dates, and assign confidence scores. Tasks without clear assignees must show 'Unassigned - Human Input Required'. All suggestions start with 'Suggested' status.",
+
+        "context": "Action items from leadership meetings frequently fall through the cracks because they're mentioned but never formally assigned or tracked. AI detection ensures no tasks are missed while requiring human approval before creating items in Microsoft Planner. The system must map suggested assignees to the organization directory.",
+
+        "requirements": [
+          {
+            "id": "REQ-004-01",
+            "description": "Identify action item statements in transcripts",
+            "acceptance_criteria": "Given a meeting transcript, when the AI processes it, then it identifies statements that appear to be action items",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-004-02",
+            "description": "Include task metadata and confidence",
+            "acceptance_criteria": "Given a suggested task, when viewed, then it includes: task description, suggested assignee, suggested due date (if mentioned), and confidence score",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-004-03",
+            "description": "Flag tasks without clear assignee",
+            "acceptance_criteria": "Given a task without a clear assignee, when viewed, then the assignee field shows 'Unassigned - Human Input Required'",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-004-04",
+            "description": "Flag tasks without due date",
+            "acceptance_criteria": "Given a task without a mentioned due date, when viewed, then it is flagged with 'No Due Date - Human Input Required'",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-004-05",
+            "description": "Initialize with Suggested status",
+            "acceptance_criteria": "Given a new task suggestion, when created, then its status is 'Suggested' (NOT created in Planner)",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-004-06",
+            "description": "Map assignees to organization directory",
+            "acceptance_criteria": "Given a task with mentioned assignee name, when processed, then the name is matched to Azure AD user with >80% confidence or flagged for manual selection",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Task detection patterns: explicit assignments ('John, please...', 'Can you...'), commitments ('I will...', 'I'll take care of...'), action language ('needs to be done', 'action item:', 'TODO:')",
+          "Due date detection: explicit dates, relative dates ('by Friday', 'next week', 'end of month'), deadline keywords",
+          "Assignee matching: Use Microsoft Graph API to search Azure AD users by display name",
+          "Store suggestions with status: 'suggested' | 'approved' | 'rejected' | 'modified'",
+          "Include transcript context with each suggestion",
+          "Support priority inference: urgent, high, normal, low based on language cues"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/services/tasks/task_detection_service.py",
+          "src/services/tasks/test_task_detection_service.py",
+          "src/services/tasks/task_extractor.py",
+          "src/services/tasks/test_task_extractor.py",
+          "src/services/tasks/assignee_resolver.py",
+          "src/services/tasks/test_assignee_resolver.py",
+          "src/services/tasks/due_date_parser.py",
+          "src/services/tasks/test_due_date_parser.py",
+          "src/models/task_suggestion.py",
+          "src/repositories/task_suggestion_repository.py"
+        ],
+
+        "dependencies": ["US-001", "US-002"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "TaskDetectionService identifies action items from transcripts",
+          "Assignee names matched to Azure AD users via Graph API",
+          "Unmatched assignees flagged as 'Unassigned - Human Input Required'",
+          "Due dates parsed from various formats (explicit, relative)",
+          "Missing due dates flagged appropriately",
+          "All suggestions created with 'Suggested' status",
+          "Priority inference working based on language cues",
+          "Transcript context included with suggestions",
+          "All unit tests pass with >80% coverage"
+        ],
+        "verification_commands": [
+          "pytest src/services/tasks/ -v --cov=src/services/tasks --cov-fail-under=80",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_004_TASK_DETECTION_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 45,
+        "escape_conditions": [
+          "If assignee matching accuracy is too low, expand search to include email aliases and nicknames",
+          "If due date parsing fails on common formats, add more date format patterns",
+          "If too many false positives, review and tighten detection patterns",
+          "After 35 iterations without progress, document edge cases for manual handling"
+        ],
+        "self_correction_hints": [
+          "Test DueDateParser with diverse date formats: '1/15/2026', 'January 15th', 'next Friday', 'EOD', 'Q1'",
+          "Test AssigneeResolver with full names, first names only, nicknames, and email addresses",
+          "Verify 'Suggested' status is always set before persistence",
+          "Check that transcript context provides sufficient surrounding text for human review",
+          "Monitor detection patterns for meeting types: formal vs informal language"
+        ]
+      }
+    },
+
+    {
+      "id": "US-005",
+      "title": "Human Approval Workflow for Decisions",
+      "phase": 1,
+      "priority": "MUST",
+      "persona": "Executive Assistant",
+
+      "prompt": {
+        "task_description": "Implement the human approval workflow API and interface for reviewing, modifying, and approving/rejecting AI-suggested decisions. The interface must show all pending suggestions per meeting, allow text modification before approval, capture rejection reasons, maintain complete audit trail, and support batch operations. Maximum pending time before escalation is 72 hours.",
+
+        "context": "Human-in-the-loop is a non-negotiable design principle for regulatory compliance (EU AI Act, MNB requirements). Every AI suggestion must be explicitly approved by a human before becoming actionable. The approval interface is critical for user adoption - it must be efficient to use while maintaining complete traceability.",
+
+        "requirements": [
+          {
+            "id": "REQ-005-01",
+            "description": "Display all pending suggestions per meeting",
+            "acceptance_criteria": "Given AI suggestions, when approver opens the approval interface, then they see all pending suggestions for a meeting grouped by type (decisions/tasks)",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-005-02",
+            "description": "Enable modification before approval",
+            "acceptance_criteria": "Given a suggestion, when approved, then the approver can optionally modify the text before approval",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-005-03",
+            "description": "Log both original and modified text",
+            "acceptance_criteria": "Given a suggestion approved with modifications, when audit trail is checked, then both original AI text and final approved text are logged",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-005-04",
+            "description": "Require rejection reason",
+            "acceptance_criteria": "Given a suggestion, when rejected, then the approver must provide a rejection reason before completing rejection",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-005-05",
+            "description": "Archive approved decisions with approver identity",
+            "acceptance_criteria": "Given an approved decision, when approval is confirmed, then it is archived to the knowledge base with approver identity and timestamp",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-005-06",
+            "description": "Maintain complete audit trail",
+            "acceptance_criteria": "Given any decision, when audit trail is checked, then it shows: original AI suggestion, any modifications, approver identity, and timestamp",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-005-07",
+            "description": "Support batch approval operations",
+            "acceptance_criteria": "Given multiple suggestions, when batch approve is selected, then approver can approve multiple items with single confirmation",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-005-08",
+            "description": "Escalate after 72 hours",
+            "acceptance_criteria": "Given a suggestion pending for >72 hours, when escalation check runs, then backup approver is notified",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Build FastAPI REST API for approval workflow",
+          "Use Microsoft authentication (Azure AD via MSAL) for approver identity",
+          "Approval states: pending -> approved/rejected/modified",
+          "Audit log structure: {suggestion_id, original_text, modified_text, action, actor_id, timestamp, reason}",
+          "Batch operations with confirmation",
+          "Escalation service runs on schedule (every hour) checking for stale suggestions",
+          "Support 'Approve All' with mandatory confirmation for meetings with many suggestions",
+          "Frontend can be built later - focus on API first"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/api/routes/approval_routes.py",
+          "src/api/routes/test_approval_routes.py",
+          "src/services/approval/approval_service.py",
+          "src/services/approval/test_approval_service.py",
+          "src/services/approval/escalation_service.py",
+          "src/services/approval/test_escalation_service.py",
+          "src/services/audit/audit_logger.py",
+          "src/services/audit/test_audit_logger.py",
+          "src/models/approval_audit_entry.py",
+          "src/schemas/approval_schemas.py"
+        ],
+
+        "dependencies": ["US-003"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "FastAPI endpoints for listing, approving, rejecting, modifying suggestions",
+          "Single-item approve/reject/modify workflow functioning",
+          "Batch approval endpoint working",
+          "Rejection requires and stores reason",
+          "Audit trail captures all required fields",
+          "Modified text logged alongside original",
+          "Escalation service triggers after 72 hours",
+          "Azure AD authentication integrated via MSAL",
+          "All unit tests pass with >80% coverage",
+          "API documentation generated via OpenAPI/Swagger"
+        ],
+        "verification_commands": [
+          "pytest src/api/routes/ -v --cov=src/api/routes --cov-fail-under=80",
+          "pytest src/services/approval/ -v --cov=src/services/approval --cov-fail-under=80",
+          "pytest src/services/audit/ -v --cov=src/services/audit --cov-fail-under=80",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_005_DECISION_APPROVAL_WORKFLOW_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 50,
+        "escape_conditions": [
+          "If Azure AD integration fails, verify app registration and redirect URIs",
+          "If batch operations cause performance issues, implement pagination",
+          "After 40 iterations, prioritize core single-item workflow over batch features"
+        ],
+        "self_correction_hints": [
+          "Test approval workflow end-to-end: suggestion -> review -> approve/reject -> audit log",
+          "Verify audit entries contain all required fields before marking complete",
+          "Ensure rejection endpoint enforces non-empty reason",
+          "Test escalation service with mocked time to verify 72-hour threshold",
+          "Use FastAPI TestClient for API testing"
+        ]
+      }
+    },
+
+    {
+      "id": "US-006",
+      "title": "Human Approval Workflow for Tasks",
+      "phase": 1,
+      "priority": "MUST",
+      "persona": "Executive Assistant",
+
+      "prompt": {
+        "task_description": "Implement the human approval workflow for AI-suggested tasks. Allow approvers to review, modify (description, assignee, due date, priority), and approve/reject task suggestions. Upon approval, create tasks in Microsoft Planner with links back to source meeting. Assignee is mandatory before approval.",
+
+        "context": "Task suggestions must go through human approval before being created in Microsoft Planner. Approvers need ability to modify all task fields since AI suggestions may have incorrect assignees or due dates. The link back to source meeting provides critical context for task owners.",
+
+        "requirements": [
+          {
+            "id": "REQ-006-01",
+            "description": "Enable modification of task fields on approval",
+            "acceptance_criteria": "Given a task suggestion, when approved, then approver can modify: description, assignee, due date, and priority before final approval",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-006-02",
+            "description": "Require assignee before approval",
+            "acceptance_criteria": "Given a task without an assignee, when approver attempts to approve, then they must specify an assignee before approval completes",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-006-03",
+            "description": "Create task in Planner on approval",
+            "acceptance_criteria": "Given an approved task, when approval is confirmed, then it is created in Microsoft Planner in configured plan/bucket",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-006-04",
+            "description": "Include source meeting link in Planner task",
+            "acceptance_criteria": "Given a created Planner task, when viewed, then it includes a link back to the source meeting transcript",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-006-05",
+            "description": "Support assignment to individuals or groups",
+            "acceptance_criteria": "Given a task, when assigning, then approver can select individual users or Microsoft 365 groups",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Integrate with Microsoft Planner API (Graph API) for task creation",
+          "Support configurable Planner plan and bucket structure",
+          "Task fields: title, description, assignee(s), due date, priority (urgent/important/medium/low)",
+          "Include meeting link in task notes/description",
+          "Batch task approval supported",
+          "Audit trail for task approvals same as decisions",
+          "Assignee search with Azure AD user/group lookup"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/api/routes/task_approval_routes.py",
+          "src/api/routes/test_task_approval_routes.py",
+          "src/services/approval/task_approval_service.py",
+          "src/services/approval/test_task_approval_service.py",
+          "src/integrations/planner/planner_client.py",
+          "src/integrations/planner/test_planner_client.py",
+          "src/services/users/user_search_service.py",
+          "src/services/users/test_user_search_service.py",
+          "src/schemas/task_approval_schemas.py"
+        ],
+
+        "dependencies": ["US-004", "US-005"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "Task approval API with editable fields (description, assignee, due date, priority)",
+          "Assignee mandatory validation before approval",
+          "User search returns Azure AD users and groups",
+          "PlannerClient creates tasks via Graph API",
+          "Created tasks include source meeting link",
+          "Batch task approval working",
+          "Audit trail captures task approval events",
+          "All unit tests pass with >80% coverage",
+          "Integration test with mock Planner API succeeds"
+        ],
+        "verification_commands": [
+          "pytest src/api/routes/test_task_approval_routes.py -v",
+          "pytest src/services/approval/test_task_approval_service.py -v",
+          "pytest src/integrations/planner/ -v --cov=src/integrations/planner --cov-fail-under=80",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_006_TASK_APPROVAL_WORKFLOW_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 40,
+        "escape_conditions": [
+          "If Planner API returns permission errors, verify Tasks.ReadWrite permission in Azure AD app",
+          "If group assignment fails, check if groups have Planner enabled",
+          "If task creation times out, implement retry logic with smaller batches",
+          "After 30 iterations without Planner integration, mock the integration and document blockers"
+        ],
+        "self_correction_hints": [
+          "Test Planner task creation with Graph Explorer first",
+          "Verify assignee validation blocks approval when no assignee selected",
+          "Check that meeting link in task description is clickable",
+          "Test batch approval with mixed valid/invalid tasks",
+          "Ensure audit events capture all task field changes"
+        ]
+      }
+    },
+
+    {
+      "id": "US-007",
+      "title": "Decision Archive and Search",
+      "phase": 1,
+      "priority": "MUST",
+      "persona": "Compliance Officer",
+
+      "prompt": {
+        "task_description": "Implement the decision archive storage and search functionality. Store approved decisions in SharePoint with full metadata. Enable search by keyword, date range, meeting, and attendees. Search results must provide full context including decision text, meeting reference, approver, and related decisions. Support export to PDF/Excel for audit documentation.",
+
+        "context": "The decision archive is the 'single source of truth' for executive decisions - a core value proposition. Compliance officers need to quickly locate decisions for audits, which currently takes weeks of manual searching. The 15-year retention requirement is critical for MNB compliance. Search must return results within 2 minutes.",
+
+        "requirements": [
+          {
+            "id": "REQ-007-01",
+            "description": "Enable keyword search",
+            "acceptance_criteria": "Given the archive, when searching by keyword, then results include decisions containing that term in text or metadata",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-007-02",
+            "description": "Enable date range filtering",
+            "acceptance_criteria": "Given the archive, when filtering by date range, then only decisions from that period are shown",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-007-03",
+            "description": "Enable meeting/attendee filtering",
+            "acceptance_criteria": "Given the archive, when filtering by meeting or attendees, then only relevant decisions are shown",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-007-04",
+            "description": "Show full context in search results",
+            "acceptance_criteria": "Given a search result, when clicked, then full context is displayed: decision text, meeting reference, approver, approval date, decision category, and related decisions",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-007-05",
+            "description": "Link to original transcript/recording",
+            "acceptance_criteria": "Given a decision, when viewing details, then user can access the original meeting transcript (if still available within retention period)",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-007-06",
+            "description": "Export to PDF/Excel",
+            "acceptance_criteria": "Given search results, when export is requested, then results can be exported to PDF or Excel format for audit documentation",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-007-07",
+            "description": "Support decision relationships",
+            "acceptance_criteria": "Given a decision, when viewing details, then related decisions (supersedes, relates to) are shown if relationships exist",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Use SharePoint Search or Azure Cognitive Search for full-text search",
+          "Decision metadata: id, text, category, meeting_id, meeting_date, attendees, approver, approval_date, transcript_link, related_decisions",
+          "Search response time target: <3 seconds",
+          "Support compound filters (keyword + date + attendee)",
+          "Export formats: PDF (formatted report), Excel (raw data)",
+          "Decision relationships stored as links between decision IDs",
+          "Index updated within 5 minutes of new decision archival",
+          "Support pagination for large result sets (default 20 per page)"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/api/routes/archive_routes.py",
+          "src/api/routes/test_archive_routes.py",
+          "src/services/archive/decision_archive_service.py",
+          "src/services/archive/test_decision_archive_service.py",
+          "src/services/search/decision_search_service.py",
+          "src/services/search/test_decision_search_service.py",
+          "src/services/export/export_service.py",
+          "src/services/export/test_export_service.py",
+          "src/integrations/sharepoint/sharepoint_search_client.py",
+          "src/models/archived_decision.py",
+          "src/schemas/search_schemas.py"
+        ],
+
+        "dependencies": ["US-005"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "Archive API endpoints for CRUD and search operations",
+          "Keyword search returns relevant results",
+          "Date range and attendee filters working",
+          "Full decision context returned on detail request",
+          "Link to source transcript functional",
+          "Related decisions shown when relationships exist",
+          "PDF and Excel export working",
+          "Search response time <3 seconds",
+          "Pagination implemented for large result sets",
+          "All unit tests pass with >80% coverage"
+        ],
+        "verification_commands": [
+          "pytest src/services/archive/ -v --cov=src/services/archive --cov-fail-under=80",
+          "pytest src/services/search/ -v --cov=src/services/search --cov-fail-under=80",
+          "pytest src/services/export/ -v --cov=src/services/export --cov-fail-under=80",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_007_DECISION_ARCHIVE_SEARCH_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 45,
+        "escape_conditions": [
+          "If SharePoint Search is too slow, consider Azure Cognitive Search as alternative",
+          "If export fails for large result sets, implement chunked export",
+          "If search indexing delays are too long, implement manual reindex trigger",
+          "After 35 iterations, prioritize core search over export features"
+        ],
+        "self_correction_hints": [
+          "Test search with realistic data volume (1000+ decisions)",
+          "Verify filter combinations work correctly (AND logic)",
+          "Check PDF export renders correctly with special characters",
+          "Test Excel export opens correctly in Microsoft Excel",
+          "Measure search response time and optimize if >3 seconds"
+        ]
+      }
+    },
+
+    {
+      "id": "US-008",
+      "title": "Email Decision/Task Flagging",
+      "phase": 2,
+      "priority": "MUST",
+      "persona": "Executive",
+
+      "prompt": {
+        "task_description": "Implement AI-powered detection of decisions and tasks within incoming emails. Flag emails containing potential decisions or tasks with visual indicators in Outlook. Highlight the specific sections where decisions/tasks were detected. Allow users to dismiss flags after review.",
+
+        "context": "Executive decisions often happen via email but get lost in inbox volume. Email flagging surfaces important items without requiring constant monitoring. The flagging should appear within 15 minutes of email receipt. Integration should feel native to the Outlook experience.",
+
+        "requirements": [
+          {
+            "id": "REQ-008-01",
+            "description": "Flag emails containing potential decisions",
+            "acceptance_criteria": "Given an incoming email, when AI detects decision-like content, then the email is flagged with 'Contains Possible Decision' indicator",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-008-02",
+            "description": "Flag emails containing potential tasks",
+            "acceptance_criteria": "Given an incoming email, when AI detects task-like content, then the email is flagged with 'Contains Possible Task' indicator",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-008-03",
+            "description": "Highlight detected sections",
+            "acceptance_criteria": "Given a flagged email, when viewed, then the specific sections where decisions/tasks were detected are highlighted",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-008-04",
+            "description": "Enable flag dismissal",
+            "acceptance_criteria": "Given a flagged email, when user dismisses the flag, then they can mark it as 'Reviewed - No Action Needed'",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-008-05",
+            "description": "Process within 15 minutes",
+            "acceptance_criteria": "Given an incoming email, when processed, then flagging appears within 15 minutes of email receipt",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Use Microsoft Graph API for email access (Mail.Read permission)",
+          "Implement Outlook Add-in for native flagging experience",
+          "Use message extensions or categories for visual flags",
+          "Process emails through message queue for scalability",
+          "Apply same detection patterns as meeting decisions/tasks (US-003, US-004)",
+          "Store flagging data in user's mailbox extended properties or external store",
+          "Consider processing latency - target <15 minutes from receipt"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/services/email/email_processing_service.py",
+          "src/services/email/test_email_processing_service.py",
+          "src/services/email/email_decision_detector.py",
+          "src/services/email/test_email_decision_detector.py",
+          "src/integrations/graph/mail_client.py",
+          "src/integrations/graph/test_mail_client.py",
+          "src/models/email_flag.py",
+          "src/queue/email_processing_queue.py"
+        ],
+
+        "dependencies": ["US-003", "US-004"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "EmailProcessingService processes incoming emails",
+          "Decision and task detection patterns applied to emails",
+          "Flagging mechanism stores flag status",
+          "Detected sections can be highlighted",
+          "Flag dismissal with 'Reviewed - No Action Needed' status",
+          "Processing completes within 15 minutes",
+          "Queue handles high email volume without backlog",
+          "All unit tests pass with >80% coverage"
+        ],
+        "verification_commands": [
+          "pytest src/services/email/ -v --cov=src/services/email --cov-fail-under=80",
+          "pytest src/integrations/graph/test_mail_client.py -v",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_008_EMAIL_FLAGGING_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 40,
+        "escape_conditions": [
+          "If Outlook Add-in approval delays occur, focus on backend API only",
+          "If email volume causes processing delays >15min, implement prioritization",
+          "If Graph API throttling occurs, implement proper retry with backoff",
+          "After 30 iterations, document any Outlook Add-in limitations"
+        ],
+        "self_correction_hints": [
+          "Test with various email formats: plain text, HTML, with attachments",
+          "Monitor queue depth and processing times during testing",
+          "Check Graph API permission scopes are correctly configured",
+          "Test flag dismissal persists correctly"
+        ]
+      }
+    },
+
+    {
+      "id": "US-009",
+      "title": "Email Decision Archival",
+      "phase": 2,
+      "priority": "MUST",
+      "persona": "Executive Assistant",
+
+      "prompt": {
+        "task_description": "Implement the workflow to archive decisions from flagged emails to the knowledge base. Allow users to review and modify AI-extracted decision text before archival. Maintain reference link to original email. Ensure email-based decisions appear in the same search results as meeting decisions.",
+
+        "context": "Email decisions must be captured alongside meeting decisions to provide a complete executive decision history. The approval workflow maintains human-in-the-loop control. Email metadata (sender, recipients, date) provides important context for the decision.",
+
+        "requirements": [
+          {
+            "id": "REQ-009-01",
+            "description": "Enable archival from flagged emails",
+            "acceptance_criteria": "Given a flagged email, when user chooses to archive a decision, then they can review and modify the AI-extracted decision text",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-009-02",
+            "description": "Include reference link to original email",
+            "acceptance_criteria": "Given an archived email decision, when viewed, then it includes a reference link to the original email",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-009-03",
+            "description": "Integrate with existing decision search",
+            "acceptance_criteria": "Given an email decision, when archived, then it appears in the same search results as meeting decisions",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-009-04",
+            "description": "Preserve email metadata",
+            "acceptance_criteria": "Given an archived email decision, when viewed, then it includes: sender, recipients, date, and subject from source email",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-009-05",
+            "description": "Link related email decisions",
+            "acceptance_criteria": "Given email thread with multiple decisions, when archived, then decisions from same thread are linked as related",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Extend approval workflow to support email sources",
+          "Store email reference as Graph API message ID",
+          "Email metadata: from, to, cc, date, subject, thread_id",
+          "Use same archive storage as meeting decisions (SharePoint)",
+          "Decision source types: 'meeting' | 'email' | 'chat'",
+          "Email thread handling: link decisions with same conversation_id"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/services/archive/email_decision_archive_service.py",
+          "src/services/archive/test_email_decision_archive_service.py",
+          "src/api/routes/email_archive_routes.py",
+          "src/api/routes/test_email_archive_routes.py",
+          "src/models/email_decision.py",
+          "src/schemas/email_decision_schemas.py"
+        ],
+
+        "dependencies": ["US-007", "US-008"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "Email decision archival workflow implemented",
+          "AI-extracted text editable before archival",
+          "Email reference link stored and accessible",
+          "Email metadata (sender, recipients, date, subject) preserved",
+          "Email decisions appear in unified search results",
+          "Thread-related decisions linked together",
+          "All unit tests pass with >80% coverage"
+        ],
+        "verification_commands": [
+          "pytest src/services/archive/test_email_decision_archive_service.py -v",
+          "pytest src/api/routes/test_email_archive_routes.py -v",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_009_EMAIL_DECISION_ARCHIVAL_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 35,
+        "escape_conditions": [
+          "If email reference links break over time, implement deep link fallback",
+          "If thread linking logic is too complex, simplify to same-day same-sender grouping",
+          "After 25 iterations, prioritize single-email archival over thread features"
+        ],
+        "self_correction_hints": [
+          "Test archival workflow end-to-end from flagged email to search result",
+          "Verify email reference links work after email is moved to different folder",
+          "Check that unified search returns both meeting and email decisions",
+          "Test thread linking with various email thread structures"
+        ]
+      }
+    },
+
+    {
+      "id": "US-010",
+      "title": "Email Response Suggestions",
+      "phase": 2,
+      "priority": "SHOULD",
+      "persona": "Executive",
+
+      "prompt": {
+        "task_description": "Implement AI-generated response suggestions for standard inquiry emails. When an executive opens an email that matches standard inquiry patterns, show a suggested response option. The response opens in compose mode for review and modification. Never auto-send - always require human action.",
+
+        "context": "Executives receive many routine inquiry emails that have standard responses. AI suggestions speed up response time while maintaining human control. Suggestions must respect organizational tone and style. Privacy is critical - no suggestions for sensitive topics.",
+
+        "requirements": [
+          {
+            "id": "REQ-010-01",
+            "description": "Show response suggestions for standard inquiries",
+            "acceptance_criteria": "Given a standard inquiry email, when opened, then a suggested response option is displayed",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-010-02",
+            "description": "Open suggestion in compose mode",
+            "acceptance_criteria": "Given a suggested response, when clicked, then it opens in compose mode for review before sending",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-010-03",
+            "description": "Log modifications to suggestions",
+            "acceptance_criteria": "Given a suggested response, when modified and sent, then the modifications are logged for model improvement",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-010-04",
+            "description": "Enable suggestion feedback",
+            "acceptance_criteria": "Given a response suggestion, when rejected, then user can provide feedback for model improvement",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-010-05",
+            "description": "Respect tone and style guidelines",
+            "acceptance_criteria": "Given a response suggestion, when generated, then it matches organizational tone and style guidelines",
+            "testable": false,
+            "completed": false
+          },
+          {
+            "id": "REQ-010-06",
+            "description": "Skip sensitive topics",
+            "acceptance_criteria": "Given an email about sensitive topics (HR, legal, confidential), when processed, then no response suggestion is offered",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Standard inquiry patterns: meeting requests, status requests, information requests, approval requests",
+          "Sensitive topic detection: keywords for HR, legal, confidential, personal matters",
+          "Response templates configurable by organization",
+          "Never implement auto-send functionality",
+          "Log: suggestion_id, original_suggestion, final_sent, was_modified, feedback"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/services/email/response_suggestion_service.py",
+          "src/services/email/test_response_suggestion_service.py",
+          "src/services/email/sensitive_topic_detector.py",
+          "src/services/email/test_sensitive_topic_detector.py",
+          "src/models/response_suggestion.py",
+          "src/config/response_templates.py"
+        ],
+
+        "dependencies": ["US-008"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "ResponseSuggestionService generates suggestions for standard inquiries",
+          "Sensitive topics correctly excluded from suggestions",
+          "Modification logging captures changes made",
+          "Feedback mechanism for rejected suggestions",
+          "No auto-send functionality exists",
+          "All unit tests pass with >80% coverage"
+        ],
+        "verification_commands": [
+          "pytest src/services/email/test_response_suggestion_service.py -v",
+          "pytest src/services/email/test_sensitive_topic_detector.py -v",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_010_EMAIL_RESPONSE_SUGGESTIONS_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 35,
+        "escape_conditions": [
+          "If response quality is poor, focus on template-based responses first",
+          "If sensitive topic detection has high false negatives, expand keyword list",
+          "After 25 iterations, prioritize core suggestion over feedback features"
+        ],
+        "self_correction_hints": [
+          "Test with diverse email types: meeting requests, status updates, questions",
+          "Verify sensitive topic detection catches HR, legal, personal content",
+          "Confirm no code path exists that could auto-send",
+          "Test suggestion quality against organizational style guidelines"
+        ]
+      }
+    },
+
+    {
+      "id": "US-011",
+      "title": "Natural Language Knowledge Queries",
+      "phase": 3,
+      "priority": "SHOULD",
+      "persona": "Executive",
+
+      "prompt": {
+        "task_description": "Implement natural language query interface for the decision archive. Allow executives to ask questions in plain English about past decisions ('What did we decide about the Q3 budget?') and receive relevant results. Handle ambiguous queries with clarifying questions. Suggest alternative search terms when no results found.",
+
+        "context": "Keyword search requires users to know exact terms used. Natural language search lets executives ask questions as they would to a human assistant. This significantly improves decision retrieval speed and reduces friction. Semantic search understands intent beyond exact keyword matching.",
+
+        "requirements": [
+          {
+            "id": "REQ-011-01",
+            "description": "Accept natural language questions",
+            "acceptance_criteria": "Given a natural language question, when submitted, then the system returns relevant decisions and context",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-011-02",
+            "description": "Handle specific decision queries",
+            "acceptance_criteria": "Given a question like 'What did we decide about the Q3 budget?', when answered, then results include all budget-related decisions with dates and context",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-011-03",
+            "description": "Ask clarifying questions for ambiguous queries",
+            "acceptance_criteria": "Given ambiguous results, when displayed, then the system asks clarifying questions to narrow scope",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-011-04",
+            "description": "Suggest alternatives when no results",
+            "acceptance_criteria": "Given no results, when query returns empty, then the system suggests alternative search terms or related topics",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-011-05",
+            "description": "Support follow-up questions",
+            "acceptance_criteria": "Given an initial query and results, when user asks follow-up, then context from previous query is maintained",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Implement semantic search using Azure Cognitive Search or embeddings",
+          "Use vector similarity for intent matching beyond keywords",
+          "Consider chat-like interface for iterative queries",
+          "Log queries for continuous improvement of search relevance",
+          "Clarification logic: detect multiple possible intents -> present options",
+          "Alternative suggestions: use related terms, broader/narrower concepts",
+          "Maintain session context for follow-up questions"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/api/routes/natural_language_search_routes.py",
+          "src/api/routes/test_natural_language_search_routes.py",
+          "src/services/search/semantic_search_service.py",
+          "src/services/search/test_semantic_search_service.py",
+          "src/services/search/query_understanding.py",
+          "src/services/search/test_query_understanding.py",
+          "src/integrations/cognitive/embeddings_client.py",
+          "src/models/semantic_search.py",
+          "src/schemas/semantic_search_schemas.py"
+        ],
+
+        "dependencies": ["US-007"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "Natural language query API endpoint implemented",
+          "Semantic search returns relevant results beyond keyword matching",
+          "Clarifying questions presented for ambiguous queries",
+          "Alternative suggestions shown when no results found",
+          "Follow-up questions maintain conversation context",
+          "Query logging implemented for improvement",
+          "Search response time <3 seconds",
+          "All unit tests pass with >80% coverage"
+        ],
+        "verification_commands": [
+          "pytest src/services/search/test_semantic_search_service.py -v",
+          "pytest src/services/search/test_query_understanding.py -v",
+          "pytest src/api/routes/test_natural_language_search_routes.py -v",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_011_NATURAL_LANGUAGE_SEARCH_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 50,
+        "escape_conditions": [
+          "If semantic search accuracy is too low, fall back to enhanced keyword search",
+          "If embedding generation is too slow, implement caching and batch processing",
+          "If clarification logic is too complex, simplify to single most-likely interpretation",
+          "After 40 iterations, prioritize core NL search over conversation features"
+        ],
+        "self_correction_hints": [
+          "Test with diverse question phrasings for same intent",
+          "Verify semantic similarity correctly identifies related concepts",
+          "Check clarification prompts are helpful and not annoying",
+          "Monitor search accuracy and log queries that return poor results",
+          "Test follow-up questions with various conversation flows"
+        ]
+      }
+    },
+
+    {
+      "id": "US-012",
+      "title": "Teams Chat Processing",
+      "phase": 4,
+      "priority": "SHOULD",
+      "persona": "Executive",
+
+      "prompt": {
+        "task_description": "Implement decision and task detection from Microsoft Teams chat messages. Process opted-in channels/chats for decision-like content. Notify participants when decisions are detected. Trigger approval workflow when archival is requested. Respect opt-in settings per channel.",
+
+        "context": "Informal Teams chat discussions often contain decisions that never get formally recorded. This extends the decision capture to chat while maintaining strict privacy controls via opt-in. The informal nature of chat requires higher detection thresholds to avoid noise.",
+
+        "requirements": [
+          {
+            "id": "REQ-012-01",
+            "description": "Detect decisions in chat messages",
+            "acceptance_criteria": "Given a chat thread in opted-in channel, when decision-like content is detected, then participants are notified",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-012-02",
+            "description": "Trigger archival workflow on request",
+            "acceptance_criteria": "Given a detected decision in chat, when a user requests archival, then the standard approval workflow is triggered",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-012-03",
+            "description": "Include chat context in archived decisions",
+            "acceptance_criteria": "Given a chat decision, when archived, then it includes full chat context (thread excerpt with surrounding messages)",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-012-04",
+            "description": "Support opt-in per channel/chat",
+            "acceptance_criteria": "Given Teams channels/chats, when processing, then only opted-in channels/chats are monitored (mandatory opt-in)",
+            "testable": true,
+            "completed": false
+          },
+          {
+            "id": "REQ-012-05",
+            "description": "Higher detection threshold for chat",
+            "acceptance_criteria": "Given informal chat language, when detecting decisions, then confidence threshold is higher (>70%) than meetings to reduce noise",
+            "testable": true,
+            "completed": false
+          }
+        ],
+
+        "technical_specifications": [
+          "Use Microsoft Graph API for Teams chat access (ChannelMessage.Read.All permission)",
+          "Implement Teams bot or messaging extension for notifications",
+          "Opt-in configuration stored per channel/chat",
+          "Higher confidence threshold: 70% vs 40% for meetings",
+          "Chat context: include 5 messages before/after detected decision",
+          "Notification via Teams adaptive card with 'Archive this decision' action",
+          "Privacy: only process opted-in channels, log all access for audit"
+        ],
+
+        "files_to_create_or_modify": [
+          "src/services/chat/chat_processing_service.py",
+          "src/services/chat/test_chat_processing_service.py",
+          "src/services/chat/chat_decision_detector.py",
+          "src/services/chat/test_chat_decision_detector.py",
+          "src/integrations/teams/chat_client.py",
+          "src/integrations/teams/test_chat_client.py",
+          "src/models/chat_decision.py",
+          "src/config/chat_opt_in.py"
+        ],
+
+        "dependencies": ["US-003", "US-005", "US-007"]
+      },
+
+      "success_criteria": {
+        "definition_of_done": [
+          "ChatProcessingService monitors opted-in channels/chats",
+          "Decision detection uses 70% confidence threshold",
+          "Participants notified when decision detected",
+          "Archive action triggers standard approval workflow",
+          "Chat context (surrounding messages) included in archived decisions",
+          "Opt-in configuration respected (only opted-in channels processed)",
+          "All unit tests pass with >80% coverage"
+        ],
+        "verification_commands": [
+          "pytest src/services/chat/ -v --cov=src/services/chat --cov-fail-under=80",
+          "pytest src/integrations/teams/test_chat_client.py -v",
+          "ruff check src/",
+          "mypy src/"
+        ],
+        "completion_promise": "US_012_TEAMS_CHAT_PROCESSING_COMPLETE"
+      },
+
+      "iteration_guidance": {
+        "max_iterations": 45,
+        "escape_conditions": [
+          "If Teams bot approval is delayed, focus on backend API only",
+          "If Graph API chat permissions are restricted, document requirements for IT",
+          "If detection has too many false positives in chat, increase threshold to 80%",
+          "After 35 iterations, prioritize core detection over rich notification features"
+        ],
+        "self_correction_hints": [
+          "Test with opt-in and opted-out channels to verify privacy controls",
+          "Check that chat context extraction handles deleted messages gracefully",
+          "Monitor detection accuracy with informal chat language vs meeting transcripts",
+          "Test notification delivery latency after chat message is sent"
+        ]
+      }
+    }
+  ]
+}
